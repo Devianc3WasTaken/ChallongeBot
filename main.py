@@ -48,13 +48,13 @@ def login(mail, password, expiredCookies):
 
     #print("Logging in...")
     session.post(loginURL, headers=basicHeaders, data=payload, cookies=r1.cookies) # Post to the Request URL to log in
-    #print("Successfully logged in!\n")
-
+    '''#print("Successfully logged in!\n")
+    
     with open('userCookies', 'wb') as f: # Saving cookies for future reference
         print("Saving cookies...")
         pickle.dump(session.cookies, f)
 
-    print("Saved cookies!\n")
+    print("Saved cookies!\n")'''
 
     return session, authToken # Return session to keep cookies persistent
 
