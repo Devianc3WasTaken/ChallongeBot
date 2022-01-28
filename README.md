@@ -5,6 +5,7 @@ All made using Python requests, BeautifulSoup and pickle.
 To-do:
 - Integrate into a discord bot to allow various communities (especially the FGC) to easily manage signups to events.
 - Allow for check-ins and unregistering
+- Allow to show the rules of the event
 - Potentially be able to create simple double-elim brackets for FGC events
 
 How to use:
