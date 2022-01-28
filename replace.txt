@@ -1,0 +1,22 @@
+var client = new Faye.Client('https://stream.challonge.com:8000/faye');
+  var locale = 'en';
+  
+  var subscription = client.subscribe('/tournaments/', function(message) {
+    // if we're receiving a message, the tournamnet is no longer pending
+    $('.pending-tournament-notice').hide();
+  
+    if (message.locale === locale) {
+      window._loadRefreshData(message.TournamentStore);
+    } else {
+      window._refreshTournament();
+    }
+  });
+  
+  client.bind('transport:down', function() {
+    $('.live-stamp').addClass('hide'); // the client is offline
+  });
+  
+  client.bind('transport:up', function() {
+    $('.live-stamp').removeClass('hide'); // the client is online
+    window._refreshTournament();
+  });
