@@ -8,6 +8,7 @@ To-do:
 - Allow to show the rules of the event
   - Examples would be: Printing out the rules and asking in the app to confirm "Y or N" if you agree
   - Discord bot automatically DMs the person the rules after signing up, which allows the person to read and join any Discord's if needed
+- Login using login's from other websites (such as Discord, Twitter, etc.)
 - Potentially be able to create simple double-elim brackets for FGC events
 
 How to use:
