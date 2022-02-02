@@ -1,14 +1,27 @@
-import asyncio
-import os
-import time
-
-import discord
-
 from discord.ext import commands
-from settings import DISCORD_TOKEN
-from main import login, registerUser, checkIn, unregister
 
-bot = commands.Bot(command_prefix='.')
+from main import login, registerUser, checkIn, unregister
+from settings import DISCORD_TOKEN
+
+bot = commands.Bot(command_prefix='.', help_command=None)
+
+@bot.command()
+async def help(ctx):
+    await ctx.send("""
+```
+.userdetails email:password:username (can only be used in DMs with the bot)
+For example: .userdetails deviance@gmail.com:qwerty123:deviance69
+
+.register [challongelink] (Registers the user to this event)
+For example: .register https://challonge.com/7way2nqm
+
+.checkin [challongelink] (Checks-in the user for this event)
+For example: .checkin https://challonge.com/7way2nqm
+
+.unregister [challongelink] (Unregisters the user for this event)
+For example: .unregister https://challonge.com/7way2nqm
+```
+    """)
 
 @bot.event
 async def on_ready():

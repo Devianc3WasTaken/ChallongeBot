@@ -1,12 +1,7 @@
 import io
-import re
-import textwrap
-import time
 
-from bs4 import BeautifulSoup
 import requests
-import json
-from datetime import datetime
+from bs4 import BeautifulSoup
 
 basicHeaders = {"Content-Type": "application/x-www-form-urlencoded",
                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"}
