@@ -1,14 +1,12 @@
 import io
 import re
+import textwrap
 import time
 
 from bs4 import BeautifulSoup
 import requests
-import pickle
 import json
 from datetime import datetime
-
-#Challonge saves cookies for 3 months, requires re-login every 3 months
 
 basicHeaders = {"Content-Type": "application/x-www-form-urlencoded",
                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"}
@@ -29,14 +27,9 @@ def login(mail, password, expiredCookies):
     authURL = "https://challonge.com/user_session/new" # URL for acquiring auth code
     loginURL = "https://challonge.com/user_session?continue=%2F" # URL for logging in
 
-
-    # Headers needed to access site, will give an 'Error 400' if not used
-
     r1 = session.get(authURL, headers=basicHeaders) # Initiate and assign BeautifulSoup
     findAuthCodeSoup = BeautifulSoup(r1.content, 'html.parser') # Scrape the Challonge page
     authToken = findAuthCodeSoup.find("input", type="hidden", attrs={"name": "authenticity_token"})['value'] # Scrape the auth code needed to log into the site
-    
-    print("Auth token for this session:", authToken + "\n")
 
     payload = {
         'authenticity_token': authToken,
@@ -46,19 +39,12 @@ def login(mail, password, expiredCookies):
         'commit': 'Log in'
     } # Payload needed to log into the website
 
-    #print("Logging in...")
     session.post(loginURL, headers=basicHeaders, data=payload, cookies=r1.cookies) # Post to the Request URL to log in
-    '''#print("Successfully logged in!\n")
-    
-    with open('userCookies', 'wb') as f: # Saving cookies for future reference
-        print("Saving cookies...")
-        pickle.dump(session.cookies, f)
-
-    print("Saved cookies!\n")'''
+    print("Successfully logged in!\n")
 
     return session, authToken # Return session to keep cookies persistent
 
-def register(session, username, authToken, link):
+def registerUser(session, username, authToken, link, discordBot):
     regHeaders = {
                 "Accept": "application/json, text/plain, */*",
                 "Content-Type": "application/json",
@@ -87,16 +73,14 @@ def register(session, username, authToken, link):
     print("Going to tournament page...")
     r1 = session.get(link, headers=basicHeaders)
     print("Scraping tournament page...\n")
-    findSubCodeSoup = BeautifulSoup(r1.content, 'html.parser')
-    # print(findSubCodeSoup.prettify())
-    # time.sleep(1000)
+    tournamentPage = BeautifulSoup(r1.content, 'html.parser')
 
-    scrapedScript = findSubCodeSoup.findAll("script")[16].string
+    tournamentRules = rules(tournamentPage, discordBot)
+
+    scrapedScript = tournamentPage.findAll("script")[16].string
     print("Scraping subscription code...")
-    subscription = scrape(scrapedScript)
-    print("Found subscription code:", subscription + "\n")
-
-
+    subscription = scrapeSubCode(scrapedScript)
+    #print("Found subscription code:", subscription + "\n")
 
     print("Checking if tournament is available and allowing signups...")
     checkAvail = session.post("https://challonge.com/tournaments/" + subscription +  "/participants/check_avail.json", headers=basicHeaders, json=availPayload)
@@ -108,7 +92,7 @@ def register(session, username, authToken, link):
         print("Registration:", register)
         if register.status_code == 201:
             print("Registration complete! Good luck on the tournament")
-            return
+            return tournamentRules
         else:
             print("Error! Something went wrong along the way. Please message Deviance#3806 for any bugs or double check the tournament/login details")
             return
@@ -125,13 +109,6 @@ def checkIn(session, username, authToken, link):
                 "Referer": "https://challonge.com/tournaments/signup/jUKPpXcRse",
                 "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"}
 
-    availPayload = {
-        'authenticity_token': authToken,
-        'participant': {
-                "name" : username
-            }
-    }  # Payload needed to check avail
-
     registerPayload = {
         "authenticity_token":authToken,
         "participant":{
@@ -141,19 +118,15 @@ def checkIn(session, username, authToken, link):
         }
     } # Payload needed to register
 
-
     print("Going to tournament page...")
     r1 = session.get(link, headers=basicHeaders)
     print("Scraping tournament page...\n")
     findSubCodeSoup = BeautifulSoup(r1.content, 'html.parser')
-    # print(findSubCodeSoup.prettify())
-    # time.sleep(1000)
 
-    scrapedScript = findSubCodeSoup.findAll("script")[16].string
+    tournamentPage = findSubCodeSoup.findAll("script")[16].string
     print("Scraping subscription code...")
-    subscription = scrape(scrapedScript)
+    subscription = scrapeSubCode(tournamentPage)
     print("Found subscription code:", subscription + "\n")
-
 
     print("Tournament available! Checking in...\n")
     checkingIn = session.post("https://challonge.com/tournaments/" + subscription + "/participants/163586547/check_in", headers=regHeaders, data=registerPayload)
@@ -164,7 +137,7 @@ def checkIn(session, username, authToken, link):
     else:
         print("Error! Something went wrong along the way. Please message Deviance#3806 for any bugs or double check the tournament/login details")
 
-def unregister(session, username, authToken, link):
+def unregister(session, authToken, link):
     unregLink = link + "/participant_settings"
     unregHeaders = {
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -180,13 +153,10 @@ def unregister(session, username, authToken, link):
         "authenticity_token": authToken
     } # Payload needed to unregister
 
-
     print("Going to unregister page...")
     r1 = session.get(unregLink, headers=basicHeaders)
     print("Scraping unregister page...\n")
     scrapedUnregisterLink = BeautifulSoup(r1.content, 'html.parser')
-    # print(findSubCodeSoup.prettify())
-    # time.sleep(1000)
 
     scrapedUnregisterLink = scrapedUnregisterLink.find(class_='btn btn-danger btn-sm pull-right', href=True)
     scrapedUnregisterLink = scrapedUnregisterLink['href']
@@ -197,14 +167,32 @@ def unregister(session, username, authToken, link):
     print("Tournament available! Unregistering...\n")
     unregister = session.post(scrapedUnregisterLink, headers=unregHeaders, data=unregisterPayload)
     print("Unregister status code:", unregister)
-    #print("Unregister headers:\n", unregister.headers)
+
     if unregister.status_code == 302 or unregister.status_code == 200: # Returns code 200 even though normally it is supposed to return 302, it still unregisters the user, so we can pass it as successful
         print("Check-in complete! Good luck on the tournament")
         return
     else:
         print("Error! Something went wrong along the way. Please message Deviance#3806 for any bugs or double check the tournament/login details")
 
-def scrape(scrapedScript):
+def rules(tournamentPage, discordBot):
+    # class with rules is "tournament-description limited_width"
+    tournamentRules = tournamentPage.find(class_="tournament-description limited_width")
+    tournamentRulesFormatted = tournamentRules.get_text('\n', strip=True)
+    tournamentRulesFormatted = tournamentRulesFormatted.replace('Show Full Description', '')
+
+    if not discordBot:
+        print("Rules:\n\n" + tournamentRulesFormatted)
+        choice = input("\nDo you agree to the rules? [Y] or [N]: ")
+        if choice == "Y" or choice == "y":
+            return
+        else:
+            print("Since you do not agree, you will not be able to sign up to the tournament.")
+            quit()
+    else:
+        return tournamentRulesFormatted
+    return
+
+def scrapeSubCode(scrapedScript):
     f = io.StringIO(scrapedScript) # Read variable as a text file by streaming it as an IOStream
     subscription = f.readlines()[4] # Go to the specific line which contains the subscription code
 
@@ -243,7 +231,7 @@ def main():
         challongeLink = input("Please input the challonge link for registering: ")
         loginDetails = getLoginDetails("login.txt")
         session, authToken = login(loginDetails[0], loginDetails[1], False)
-        register(session, loginDetails[2], authToken, challongeLink)
+        registerUser(session, loginDetails[2], authToken, challongeLink, False)
         input("Press [ENTER] to exit program...")
         quit()
 
@@ -259,7 +247,7 @@ def main():
         challongeLink = input("Please input the challonge link for unregistering: ")
         loginDetails = getLoginDetails("login.txt")
         session, authToken = login(loginDetails[0], loginDetails[1], False)
-        unregister(session, loginDetails[2], authToken, challongeLink)
+        unregister(session, authToken, challongeLink)
         input("Press [ENTER] to exit program...")
         quit()
 
@@ -267,4 +255,8 @@ def main():
         print("Quitting program...")
         quit()
 
-main()
+#main()
+
+
+
+
