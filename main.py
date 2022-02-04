@@ -164,7 +164,7 @@ def unregister(session, authToken, link):
     print("Unregister status code:", unregister)
 
     if unregister.status_code == 302 or unregister.status_code == 200: # Returns code 200 even though normally it is supposed to return 302, it still unregisters the user, so we can pass it as successful
-        print("Check-in complete! Good luck on the tournament")
+        print("Unregister complete! Good luck on the tournament")
         return
     else:
         print("Error! Something went wrong along the way. Please message Deviance#3806 for any bugs or double check the tournament/login details")

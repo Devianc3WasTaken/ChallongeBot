@@ -104,15 +104,15 @@ async def register(ctx, challongeLink):
         await ctx.send('Please DM me your login details using ".userdetails email:password:username"! \nMessage will delete in 10 secs', delete_after=10)
         return
 
+    print(format(ctx.message.author))
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     tournamentRules = registerUser(session, loginDetails[2], authToken, challongeLink, True)
 
-    print(format(ctx.message.author))
     userID = ctx.message.author.id
     user = await bot.fetch_user(int(userID))
 
     await user.send(tournamentRules)
-    await ctx.send(format(ctx.message.author), "has successfully registered! Rules have been DMed!")
+    await ctx.send(f'{ctx.message.author} has successfully registered! Rules have been DMed!')
 
 @bot.command(name='checkin')
 async def checkin(ctx, challongeLink):
@@ -123,10 +123,11 @@ async def checkin(ctx, challongeLink):
             delete_after=10)
         return
 
+    print(format(ctx.message.author))
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     checkIn(session, loginDetails[2], authToken, challongeLink)
 
-    await ctx.send(format(ctx.message.author), "has successfully checked in!")
+    await ctx.send(f'{ctx.message.author} + has successfully checked in!')
 
 @bot.command(name='unregister')
 async def unregistering(ctx, challongeLink):
@@ -137,9 +138,10 @@ async def unregistering(ctx, challongeLink):
             delete_after=10)
         return
 
+    print(format(ctx.message.author))
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     unregister(session, authToken, challongeLink)
 
-    await ctx.send(format(ctx.message.author), "has successfully unregistered!")
+    await ctx.send(f'{ctx.message.author} has successfully unregistered!')
 
 bot.run(DISCORD_TOKEN)
