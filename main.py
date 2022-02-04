@@ -250,7 +250,7 @@ def main():
         print("Quitting program...")
         quit()
 
-#main()
+#main() #Uncomment if wanting to use as standalone
 
 
 

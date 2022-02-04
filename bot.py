@@ -9,7 +9,7 @@ bot = commands.Bot(command_prefix='.', help_command=None)
 async def help(ctx):
     await ctx.send("""
 ```
-.userdetails email:password:username (can only be used in DMs with the bot)
+.userdetails email:password:username (Can only be used in DMs with the bot, register user details to the bot)
 For example: .userdetails deviance@gmail.com:qwerty123:deviance69
 
 .register [challongelink] (Registers the user to this event)
@@ -20,6 +20,12 @@ For example: .checkin https://challonge.com/7way2nqm
 
 .unregister [challongelink] (Unregisters the user for this event)
 For example: .unregister https://challonge.com/7way2nqm
+
+.github (Contains the source code for the bot)
+For example: .github
+
+.clearDM (Can only be used in DMs with the bot, clear the last 100 bot messages)
+For example: .clearDM
 ```
     """)
 
@@ -40,6 +46,12 @@ async def on_error(event, *args, **kwargs):
         else:
             raise
 
+@bot.command(name='test')
+@commands.is_owner()
+async def test(ctx):
+    await ctx.send("Bot is being tested! \nMessage will delete in 5 secs", delete_after=5)
+    print(format(ctx.message.author))
+
 @bot.command(name='clearDM')
 @commands.dm_only()
 async def clearDM(ctx):
@@ -53,11 +65,9 @@ async def clearDM(ctx):
     print("Purge complete!")
     await ctx.send("Purged! \nMessage will delete in 5 secs", delete_after=5)
 
-@bot.command(name='test')
-@commands.is_owner()
-async def test(ctx):
-    await ctx.send("Bot is being tested! \nMessage will delete in 5 secs", delete_after=5)
-    print(format(ctx.message.author))
+@bot.command(name='github')
+async def github(ctx):
+    await ctx.send("https://github.com/Devianc3WasTaken/ChallongeBot/")
 
 @bot.command(name='shutdown')
 @commands.is_owner()
@@ -77,7 +87,6 @@ async def checkUserDetails(ctx):
 
     #print("Looping messages...")
     for msg in messages:
-        #print(msg.content)
         if ".userdetails" in msg.content:
             userInfo = msg.content.replace(".userdetails ", "")
             userInfo = userInfo.split(":")
@@ -94,7 +103,6 @@ async def register(ctx, challongeLink):
         await ctx.send('Please DM me your login details using ".userdetails email:password:username"! \nMessage will delete in 10 secs', delete_after=10)
         return
 
-    #loginDetails = getLoginDetails("C:\ChallongeBot\login.txt") #For standalone, not to be used with discord bot
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     tournamentRules = registerUser(session, loginDetails[2], authToken, challongeLink, True)
 
@@ -103,7 +111,7 @@ async def register(ctx, challongeLink):
     user = await bot.fetch_user(int(userID))
 
     await user.send(tournamentRules)
-    await ctx.send("Successfully registered! DMing the user the rules\nMessage will delete in 5 secs", delete_after=5)
+    await ctx.send(format(ctx.message.author), "has successfully registered! Rules have been DMed!")
 
 @bot.command(name='checkin')
 async def checkin(ctx, challongeLink):
@@ -114,11 +122,10 @@ async def checkin(ctx, challongeLink):
             delete_after=10)
         return
 
-    #loginDetails = getLoginDetails("C:\ChallongeBot\login.txt") #For standalone, not to be used with discord bot
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     checkIn(session, loginDetails[2], authToken, challongeLink)
 
-    await ctx.send("Successfully checked in! \nMessage will delete in 5 secs", delete_after=5)
+    await ctx.send(format(ctx.message.author), "has successfully checked in!")
 
 @bot.command(name='unregister')
 async def unregistering(ctx, challongeLink):
@@ -129,10 +136,9 @@ async def unregistering(ctx, challongeLink):
             delete_after=10)
         return
 
-    #loginDetails = getLoginDetails("C:\ChallongeBot\login.txt") #For standalone, not to be used with discord bot
     session, authToken = login(loginDetails[0], loginDetails[1], False)
     unregister(session, authToken, challongeLink)
 
-    await ctx.send("Successfully unregistered! \nMessage will delete in 5 secs", delete_after=5)
+    await ctx.send(format(ctx.message.author), "has successfully unregistered!")
 
 bot.run(DISCORD_TOKEN)
