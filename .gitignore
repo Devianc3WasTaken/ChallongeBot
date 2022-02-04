@@ -6,4 +6,5 @@ user/
 *.exe
 .env
 *.log
+login.txt
 userCookies

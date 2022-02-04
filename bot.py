@@ -6,6 +6,7 @@ from settings import DISCORD_TOKEN
 bot = commands.Bot(command_prefix='.', help_command=None)
 
 @bot.command()
+@commands.guild_only()
 async def help(ctx):
     await ctx.send("""
 ```
